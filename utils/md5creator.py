@@ -9,7 +9,7 @@ import traceback
 from pathlib import Path
 
 
-def main(args):
+def md5creator(args):
     # 参数处理
     input_file = Path(args.input)
     output_file = args.output
@@ -41,7 +41,7 @@ def main(args):
     print(f'Completed! Output file named "{output_file}"')
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(usage='MD5 Creator', description=' --help')
     parser.add_argument(dest='input', type=str, help='input file')
     parser.add_argument('-o', '--output', required=False, type=str, help='output file', dest='output')
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--show', action='store_true', help='show each chunk md5sum', dest='show')
     error_code = 0
     try:
-        main(parser.parse_args(sys.argv[1:]))
+        md5creator(parser.parse_args(sys.argv[1:]))
     except (KeyboardInterrupt, Exception):
         traceback.print_exc()
         error_code = 130
