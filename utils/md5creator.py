@@ -14,7 +14,7 @@ def md5creator(args):
     input_file = Path(args.input)
     output_file = args.output
     if output_file is None:
-        output_file = input_file.parent / f'{input_file.stem}.jm'
+        output_file = input_file.parent / f'{input_file.name}.jm'
     chunk_size = args.chunk_size
     show = args.show
     # 实现
