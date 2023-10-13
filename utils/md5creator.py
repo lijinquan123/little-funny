@@ -45,7 +45,7 @@ def main():
     parser = argparse.ArgumentParser(usage='MD5 Creator', description=' --help')
     parser.add_argument(dest='input', type=str, help='input file')
     parser.add_argument('-o', '--output', required=False, type=str, help='output file', dest='output')
-    parser.add_argument('-cs', '--chunk-size', type=int, default=1024, help='chunk size', dest='chunk_size')
+    parser.add_argument('-cs', '--chunk-size', type=int, default=10 * 1024 * 1024, help='chunk size', dest='chunk_size')
     parser.add_argument('-s', '--show', action='store_true', help='show each chunk md5sum', dest='show')
     error_code = 0
     try:
