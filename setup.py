@@ -8,15 +8,16 @@ from pathlib import Path
 from setuptools import find_packages, setup
 
 VERSION_PATH = Path(__file__).parent / 'version.json'
-version, description = json.loads(VERSION_PATH.read_text("utf-8"))
-__version__ = f'1.0.{int(version)}'
+__version__, description = json.loads(VERSION_PATH.read_text("utf-8"))
 setup(
     name='Little Funny',
     version=__version__,
     url='',
     license='None',
     author='LJQ',
-    install_requires=[],
+    install_requires=[
+        'requests',  # 2.31.0
+    ],
     dependency_links=[],
     description='little funny',
     long_description='little but useful tools!',
