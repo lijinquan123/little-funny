@@ -6,6 +6,8 @@
 # @Author      : LJQ
 # @Time        : 2023/11/14 14:56
 # @Version     : Python 3.6.4
+import json
+import time
 from urllib.parse import urlparse
 
 import xmltodict
@@ -19,7 +21,8 @@ def converter(xml_content: str):
 
     # 将 XML 转换为字典
     target = {
-        'groups': []
+        'version': time.strftime('%Y/%m/%d %H:%M:%S'),
+        'groups': [],
     }
     for array_name, arrays in xmltodict.parse(xml_content)['resources'].items():
         for array in arrays:
@@ -38,4 +41,4 @@ def converter(xml_content: str):
                     'list': items
                 }
             )
-    return target
+    return json.dumps(target, indent=2, ensure_ascii=False)
