@@ -2,15 +2,17 @@
 # @Author      : LJQ
 # @Time        : 2024/5/15 15:55
 # @Version     : Python 3.12.2
-# -*- coding: utf-8 -*-
-# @Author      : LJQ
-# @Time        : 2023/11/14 14:56
-# @Version     : Python 3.6.4
 import json
 import time
 from urllib.parse import urlparse
 
 import xmltodict
+
+FAKE_MAP = {
+    '0': 'youtube.com',
+    '1': 'google.com',
+    '2': 'facebook.com',
+}
 
 
 def converter(xml_content: str):
@@ -22,19 +24,42 @@ def converter(xml_content: str):
     # 将 XML 转换为字典
     target = {
         'version': time.strftime('%Y/%m/%d %H:%M:%S'),
+        'resolves': [],
         'groups': [],
     }
     for array_name, arrays in xmltodict.parse(xml_content)['resources'].items():
         for array in arrays:
             tag = array['@name']
-            # if tag != 'auth_base_url':
-            #     continue
             items = []
+            prefixes = []
             for item in array['item']:
+                domain = urlparse(item).hostname
                 items.append({
-                    "domain": urlparse(item).hostname,
+                    "domain": domain,
                     "type": "pub"
                 })
+                prefix = domain.split('.')[0]
+                if prefix not in prefixes:
+                    prefixes.append(prefix)
+            for prefix in prefixes:
+                num = prefix[-1]
+                if not num.isdigit():
+                    num = '0'
+                if num in FAKE_MAP:
+                    fake_domain = prefix + '.' + FAKE_MAP[num]
+                    # 添加到groups中
+                    items.append({
+                        "domain": fake_domain,
+                        "type": "pri"
+                    })
+                    # 添加到resolves中
+                    target['resolves'].append({
+                        "domain": fake_domain,
+                        "type": "A",
+                        "list": [
+                            "127.0.0.1"
+                        ]
+                    })
             target['groups'].append(
                 {
                     'tag': tag,
@@ -42,3 +67,54 @@ def converter(xml_content: str):
                 }
             )
     return json.dumps(target, indent=2, ensure_ascii=False)
+
+
+def check(content: str):
+    def check_str(s):
+        if not s.strip():
+            raise Exception(f'{k} contains empty\n{json_item}')
+
+    def check_ip(s):
+        ip = s.strip().split('.')
+        if len(ip) != 4:
+            raise Exception(f'{s} is not ip\n{json_item}')
+        for p in ip:
+            if not p.isdigit():
+                raise Exception(f'{s} is not ip\n{json_item}')
+            p = int(p)
+            if p > 255 or p < 0:
+                raise Exception(f'{s} is not ip\n{json_item}')
+
+    try:
+        data = json.loads(content)
+        resolves = data['resolves']
+        fake_domains = set()
+        for item in resolves:
+            # 检查域名是否有空
+            json_item = json.dumps(item, ensure_ascii=False, indent=2)
+            for k, v in item.items():
+                if k in ['domain', 'type']:
+                    check_str(v)
+                elif k in ['list']:
+                    if not v:
+                        raise Exception(f'{k} contains empty\n{json_item} ')
+                    for i in v:
+                        check_str(i)
+                        check_ip(i)
+
+            # 找出所有假域名
+            if item['type'] == 'A':
+                fake_domains.add(item['domain'])
+
+        # 找出groups填充的假域名
+        groups = data['groups']
+        for group in groups:
+            for item in group['list']:
+                domain = item['domain']
+                if item['type'] == 'pri' and domain not in fake_domains:
+                    index = group['list'].index(item)
+                    group['list'] = group['list'][index - 2:index + 1]
+                    json_group = json.dumps(group, ensure_ascii=False, indent=2)
+                    raise Exception(f'{domain} is not in fake domain\n{json_group}')
+    except Exception as e:
+        print(e)
