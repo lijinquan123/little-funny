@@ -17,6 +17,7 @@ setup(
     author='LJQ',
     install_requires=[
         'requests',  # 2.31.0
+        'xmltodict',  # 0.13.0
     ],
     dependency_links=[],
     description='little funny',
