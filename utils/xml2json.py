@@ -31,24 +31,29 @@ def converter(xml_content: str):
         for array in arrays:
             tag = array['@name']
             items = []
-            prefixes = []
-            for item in array['item']:
+            prefixes = {}
+            if isinstance(array['item'], str):
+                array['item'] = [array['item']]
+            for index, item in enumerate(array['item']):
                 domain = urlparse(item).hostname
+                if domain is None:
+                    domain = item
                 items.append({
                     "domain": domain,
                     "type": "pub"
                 })
                 prefix = domain.split('.')[0]
-                if prefix not in prefixes:
-                    prefixes.append(prefix)
-            for prefix in prefixes:
+                prefixes[prefix] = index
+            for index, prefix in enumerate(prefixes, start=1):
+                if not prefix:
+                    continue
                 num = prefix[-1]
                 if not num.isdigit():
                     num = '0'
                 if num in FAKE_MAP:
                     fake_domain = prefix + '.' + FAKE_MAP[num]
                     # 添加到groups中
-                    items.append({
+                    items.insert(prefixes[prefix] + index, {
                         "domain": fake_domain,
                         "type": "pri"
                     })
