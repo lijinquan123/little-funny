@@ -9,9 +9,10 @@ from urllib.parse import urlparse
 import xmltodict
 
 FAKE_MAP = {
-    '0': 'youtube.com',
-    '1': 'google.com',
-    '2': 'facebook.com',
+    '0': 'taobao.com',
+    '1': 'youtube.com',
+    '2': 'google.com',
+    '3': 'facebook.com',
 }
 
 
@@ -27,7 +28,9 @@ def converter(xml_content: str):
         'resolves': [],
         'groups': [],
     }
-    for array_name, arrays in xmltodict.parse(xml_content)['resources'].items():
+    resources = xmltodict.parse(xml_content)['resources']
+    ips = resources['pri-ip-list']['item']
+    for array_name, arrays in resources['domain-group'].items():
         for array in arrays:
             tag = array['@name']
             items = []
@@ -35,6 +38,8 @@ def converter(xml_content: str):
             if isinstance(array['item'], str):
                 array['item'] = [array['item']]
             for index, item in enumerate(array['item']):
+                if isinstance(item, dict):
+                    item = item['#text']
                 domain = urlparse(item).hostname
                 if domain is None:
                     domain = item
@@ -61,9 +66,7 @@ def converter(xml_content: str):
                     target['resolves'].append({
                         "domain": fake_domain,
                         "type": "A",
-                        "list": [
-                            "127.0.0.1"
-                        ]
+                        "list": ips
                     })
             target['groups'].append(
                 {
